@@ -43,7 +43,7 @@ export const handleWritePrototypeRequest = async (request: any) => {
       const final = p.mode === "append" ? [...current, ...incoming] : incoming;
 
       await setReactions(node, final);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -76,7 +76,7 @@ export const handleWritePrototypeRequest = async (request: any) => {
       }
 
       await setReactions(node, updated);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -93,3 +93,4 @@ export const handleWritePrototypeRequest = async (request: any) => {
       return null;
   }
 };
+import { commitMutation } from "./undo-history";

@@ -3,6 +3,7 @@ package internal
 import "github.com/mark3labs/mcp-go/server"
 
 func registerWriteTools(s *server.MCPServer, node *Node) {
+	registerWriteHistoryTools(s, node)
 	registerWriteCreateTools(s, node)
 	registerWriteModifyTools(s, node)
 	registerWriteStyleTools(s, node)

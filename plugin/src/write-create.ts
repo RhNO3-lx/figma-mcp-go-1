@@ -1,5 +1,6 @@
 import { getBounds } from "./serializers";
 import { makeSolidPaint, getParentNode, base64ToBytes, applyAutoLayout } from "./write-helpers";
+import { commitMutation } from "./undo-history";
 
 export const handleWriteCreateRequest = async (request: any) => {
   switch (request.type) {
@@ -14,7 +15,7 @@ export const handleWriteCreateRequest = async (request: any) => {
       if (p.fillColor) frame.fills = [makeSolidPaint(p.fillColor)];
       applyAutoLayout(frame, p);
       (parent as any).appendChild(frame);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -33,7 +34,7 @@ export const handleWriteCreateRequest = async (request: any) => {
       if (p.fillColor) rect.fills = [makeSolidPaint(p.fillColor)];
       if (p.cornerRadius != null) rect.cornerRadius = p.cornerRadius;
       (parent as any).appendChild(rect);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -51,7 +52,7 @@ export const handleWriteCreateRequest = async (request: any) => {
       if (p.name) ellipse.name = p.name;
       if (p.fillColor) ellipse.fills = [makeSolidPaint(p.fillColor)];
       (parent as any).appendChild(ellipse);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -74,7 +75,7 @@ export const handleWriteCreateRequest = async (request: any) => {
       if (p.name) textNode.name = p.name;
       if (p.fillColor) textNode.fills = [makeSolidPaint(p.fillColor)];
       (parent as any).appendChild(textNode);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -95,7 +96,7 @@ export const handleWriteCreateRequest = async (request: any) => {
       if (p.name) rect.name = p.name;
       rect.fills = [{ type: "IMAGE", imageHash: image.hash, scaleMode: p.scaleMode || "FILL" }];
       (parent as any).appendChild(rect);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -141,7 +142,7 @@ export const handleWriteCreateRequest = async (request: any) => {
       parent.insertChild(index, component);
       node.remove();
 
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,

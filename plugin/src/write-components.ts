@@ -12,7 +12,7 @@ export const handleWriteComponentRequest = async (request: any) => {
       if (!component) throw new Error(`Component not found: ${p.componentId}`);
       if (component.type !== "COMPONENT") throw new Error(`Node ${p.componentId} is not a COMPONENT`);
       node.mainComponent = component;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -31,7 +31,7 @@ export const handleWriteComponentRequest = async (request: any) => {
         const frame = n.detachInstance();
         results.push({ nodeId: nid, newId: frame.id, name: frame.name });
       }
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -49,7 +49,7 @@ export const handleWriteComponentRequest = async (request: any) => {
         n.remove();
         results.push({ nodeId: nid, deleted: true });
       }
-      figma.commitUndo();
+      commitMutation();
       return { type: request.type, requestId: request.requestId, data: { results } };
     }
 
@@ -86,7 +86,7 @@ export const handleWriteComponentRequest = async (request: any) => {
       if (!parent) throw new Error("Nodes must have a parent");
       const group = figma.group(validNodes, parent as any);
       if (p.name) group.name = p.name;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -113,7 +113,7 @@ export const handleWriteComponentRequest = async (request: any) => {
         group.remove();
         results.push({ nodeId: nid, childIds });
       }
-      figma.commitUndo();
+      commitMutation();
       return { type: request.type, requestId: request.requestId, data: { results } };
     }
 
@@ -121,3 +121,4 @@ export const handleWriteComponentRequest = async (request: any) => {
       return null;
   }
 };
+import { commitMutation } from "./undo-history";

@@ -14,7 +14,7 @@ export const handleWriteStyleRequest = async (request: any) => {
       style.name = p.name;
       style.paints = [makeSolidPaint(p.color)];
       if (p.description) style.description = p.description;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -46,7 +46,7 @@ export const handleWriteStyleRequest = async (request: any) => {
       if (p.letterSpacingValue != null) {
         style.letterSpacing = { value: Number(p.letterSpacingValue), unit: p.letterSpacingUnit || "PIXELS" };
       }
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -85,7 +85,7 @@ export const handleWriteStyleRequest = async (request: any) => {
       style.name = p.name;
       style.effects = [effect];
       if (p.description) style.description = p.description;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -125,7 +125,7 @@ export const handleWriteStyleRequest = async (request: any) => {
       style.name = p.name;
       style.layoutGrids = [grid];
       if (p.description) style.description = p.description;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -142,7 +142,7 @@ export const handleWriteStyleRequest = async (request: any) => {
       if (p.name) style.name = p.name;
       if (p.color) (style as PaintStyle).paints = [makeSolidPaint(p.color)];
       if (p.description != null) style.description = p.description;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -156,7 +156,7 @@ export const handleWriteStyleRequest = async (request: any) => {
       const style = await figma.getStyleByIdAsync(p.styleId);
       if (!style) throw new Error(`Style not found: ${p.styleId}`);
       style.remove();
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -201,7 +201,7 @@ export const handleWriteStyleRequest = async (request: any) => {
         default:
           throw new Error(`Unknown style type: ${(style as any).type}`);
       }
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -229,7 +229,7 @@ export const handleWriteStyleRequest = async (request: any) => {
         if (!(p.field in node)) throw new Error(`Node ${nodeId} does not have field: ${p.field}`);
         node.setBoundVariable(p.field, variable);
       }
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -241,3 +241,4 @@ export const handleWriteStyleRequest = async (request: any) => {
       return null;
   }
 };
+import { commitMutation } from "./undo-history";

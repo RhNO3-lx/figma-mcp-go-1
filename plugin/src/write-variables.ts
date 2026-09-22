@@ -22,7 +22,7 @@ export const handleWriteVariableRequest = async (request: any) => {
       if (p.initialModeName && collection.modes.length > 0) {
         collection.renameMode(collection.modes[0].modeId, p.initialModeName);
       }
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -41,7 +41,7 @@ export const handleWriteVariableRequest = async (request: any) => {
       const collection = await figma.variables.getVariableCollectionByIdAsync(p.collectionId);
       if (!collection) throw new Error(`Collection not found: ${p.collectionId}`);
       const modeId = collection.addMode(p.modeName);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -64,7 +64,7 @@ export const handleWriteVariableRequest = async (request: any) => {
         const modeId = collection.modes[0].modeId;
         variable.setValueForMode(modeId, parseVariableValue(p.type, p.value));
       }
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -85,7 +85,7 @@ export const handleWriteVariableRequest = async (request: any) => {
       const variable = await figma.variables.getVariableByIdAsync(p.variableId);
       if (!variable) throw new Error(`Variable not found: ${p.variableId}`);
       variable.setValueForMode(p.modeId, parseVariableValue(variable.resolvedType, p.value));
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -99,7 +99,7 @@ export const handleWriteVariableRequest = async (request: any) => {
         const variable = await figma.variables.getVariableByIdAsync(p.variableId);
         if (!variable) throw new Error(`Variable not found: ${p.variableId}`);
         variable.remove();
-        figma.commitUndo();
+        commitMutation();
         return {
           type: request.type,
           requestId: request.requestId,
@@ -109,7 +109,7 @@ export const handleWriteVariableRequest = async (request: any) => {
         const collection = await figma.variables.getVariableCollectionByIdAsync(p.collectionId);
         if (!collection) throw new Error(`Collection not found: ${p.collectionId}`);
         collection.remove();
-        figma.commitUndo();
+        commitMutation();
         return {
           type: request.type,
           requestId: request.requestId,
@@ -124,3 +124,4 @@ export const handleWriteVariableRequest = async (request: any) => {
       return null;
   }
 };
+import { commitMutation } from "./undo-history";

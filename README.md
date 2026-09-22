@@ -85,6 +85,8 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 
 ## Available Tools
 
+Grouped editing is available through `begin_undo_group`, `commit_undo_group`, `trigger_undo_group`, and `get_undo_group`. While a group is active, write tools are counted but do not create separate undo entries; committing creates one native Figma undo step and triggering undo restores the state at group start.
+
 ### Write — Create
 
 | Tool | Description |

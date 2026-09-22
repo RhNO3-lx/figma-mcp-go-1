@@ -1,5 +1,6 @@
 import { getBounds } from "./serializers";
 import { makeSolidPaint, getParentNode, applyAutoLayout } from "./write-helpers";
+import { commitMutation } from "./undo-history";
 
 export const handleWriteModifyRequest = async (request: any) => {
   switch (request.type) {
@@ -15,7 +16,7 @@ export const handleWriteModifyRequest = async (request: any) => {
         : node.fontName;
       await figma.loadFontAsync(fontName);
       node.characters = p.text;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -34,7 +35,7 @@ export const handleWriteModifyRequest = async (request: any) => {
       (node as any).fills = p.mode === "append"
         ? [...((node as any).fills as Paint[]), newFill]
         : [newFill];
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -54,7 +55,7 @@ export const handleWriteModifyRequest = async (request: any) => {
         ? [...((node as any).strokes as Paint[]), newStroke]
         : [newStroke];
       if (p.strokeWeight != null) (node as any).strokeWeight = p.strokeWeight;
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -75,7 +76,7 @@ export const handleWriteModifyRequest = async (request: any) => {
         if (p.y != null) n.y = p.y;
         results.push({ nodeId: nid, x: n.x, y: n.y });
       }
-      figma.commitUndo();
+      commitMutation();
       return { type: request.type, requestId: request.requestId, data: { results } };
     }
 
@@ -93,7 +94,7 @@ export const handleWriteModifyRequest = async (request: any) => {
         n.resize(w, h);
         results.push({ nodeId: nid, width: n.width, height: n.height });
       }
-      figma.commitUndo();
+      commitMutation();
       return { type: request.type, requestId: request.requestId, data: { results } };
     }
 
@@ -104,6 +105,7 @@ export const handleWriteModifyRequest = async (request: any) => {
       const node = await figma.getNodeByIdAsync(nodeId);
       if (!node) throw new Error(`Node not found: ${nodeId}`);
       node.name = p.name;
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -124,7 +126,7 @@ export const handleWriteModifyRequest = async (request: any) => {
         const parent = await getParentNode(p.parentId);
         (parent as any).appendChild(clone);
       }
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
@@ -144,7 +146,7 @@ export const handleWriteModifyRequest = async (request: any) => {
         n.opacity = p.opacity;
         results.push({ nodeId: nid, opacity: n.opacity });
       }
-      figma.commitUndo();
+      commitMutation();
       return { type: request.type, requestId: request.requestId, data: { results } };
     }
 
@@ -164,7 +166,7 @@ export const handleWriteModifyRequest = async (request: any) => {
         if (p.bottomRightRadius != null) n.bottomRightRadius = p.bottomRightRadius;
         results.push({ nodeId: nid, cornerRadius: n.cornerRadius });
       }
-      figma.commitUndo();
+      commitMutation();
       return { type: request.type, requestId: request.requestId, data: { results } };
     }
 
@@ -176,7 +178,7 @@ export const handleWriteModifyRequest = async (request: any) => {
       if (!node) throw new Error(`Node not found: ${nodeId}`);
       if (node.type !== "FRAME") throw new Error(`Node ${nodeId} is not a FRAME`);
       applyAutoLayout(node, p);
-      figma.commitUndo();
+      commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
