@@ -44,7 +44,7 @@ func TestNormalizeNodeID(t *testing.T) {
 		want  string
 	}{
 		{"4029-12345", "4029:12345"},
-		{"4029:12345", "4029:12345"},  // already valid, no-op
+		{"4029:12345", "4029:12345"},       // already valid, no-op
 		{"not-a-node-id", "not-a-node-id"}, // hyphen but not a node ID
 		{"", ""},
 	}
@@ -220,6 +220,21 @@ func TestValidateRPC_SetText(t *testing.T) {
 	}
 	// valid
 	msg := ValidateRPC("set_text", []string{"1:1"}, map[string]interface{}{"text": "hello"})
+	if msg != "" {
+		t.Errorf("unexpected error: %s", msg)
+	}
+}
+
+func TestValidateRPC_SetTextStyle(t *testing.T) {
+	if msg := ValidateRPC("set_text_style", []string{"1:1"}, nil); msg == "" {
+		t.Error("expected error when no font field is provided")
+	}
+	if msg := ValidateRPC("set_text_style", []string{"1:1"}, map[string]interface{}{"fontSize": float64(0)}); msg == "" {
+		t.Error("expected error for invalid font size")
+	}
+	msg := ValidateRPC("set_text_style", []string{"1:1"}, map[string]interface{}{
+		"fontFamily": "Inter", "fontStyle": "Bold", "fontSize": float64(18),
+	})
 	if msg != "" {
 		t.Errorf("unexpected error: %s", msg)
 	}
@@ -847,11 +862,11 @@ func TestValidateAutoLayoutParams_InvalidValues(t *testing.T) {
 
 	// All valid auto-layout params together
 	msg := ValidateRPC("create_frame", nil, map[string]interface{}{
-		"primaryAxisAlignItems":  "CENTER",
-		"counterAxisAlignItems":  "BASELINE",
-		"primaryAxisSizingMode":  "AUTO",
-		"counterAxisSizingMode":  "FIXED",
-		"layoutWrap":             "WRAP",
+		"primaryAxisAlignItems": "CENTER",
+		"counterAxisAlignItems": "BASELINE",
+		"primaryAxisSizingMode": "AUTO",
+		"counterAxisSizingMode": "FIXED",
+		"layoutWrap":            "WRAP",
 	})
 	if msg != "" {
 		t.Errorf("unexpected error for valid auto-layout params: %s", msg)

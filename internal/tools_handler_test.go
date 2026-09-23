@@ -214,6 +214,9 @@ func TestHandlers_WriteModifyTools(t *testing.T) {
 	s, _ := newTestServer(t)
 
 	callTool(t, s, "set_text", map[string]any{"nodeId": "1:1", "text": "Updated"})
+	callTool(t, s, "set_text_style", map[string]any{
+		"nodeId": "1:1", "fontFamily": "Inter", "fontStyle": "Bold", "fontSize": float64(18),
+	})
 
 	callTool(t, s, "set_fills", map[string]any{
 		"nodeId": "1:1", "color": "#FF0000", "opacity": float64(0.8), "mode": "replace",

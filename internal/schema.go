@@ -7,8 +7,9 @@ import (
 )
 
 // nodeIDPattern matches Figma node IDs:
-//   simple:   "4029:12345"
-//   compound: "I2167:9091;186:1579;186:1745" (instances/variants)
+//
+//	simple:   "4029:12345"
+//	compound: "I2167:9091;186:1579;186:1745" (instances/variants)
 var nodeIDPattern = regexp.MustCompile(`^I?\d+:\d+(;\d+:\d+)*$`)
 
 // NormalizeNodeID converts hyphen-format node IDs (LLM output artifact) to colon format.
@@ -281,6 +282,23 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		}
 		if _, ok := params["text"].(string); !ok {
 			return "text is required"
+		}
+
+	case "set_text_style":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		family, _ := params["fontFamily"].(string)
+		style, _ := params["fontStyle"].(string)
+		size, hasSize := params["fontSize"].(float64)
+		if family == "" && style == "" && !hasSize {
+			return "at least one of fontFamily, fontStyle, or fontSize is required"
+		}
+		if hasSize && (size < 1 || size > 1000) {
+			return "fontSize must be between 1 and 1000"
 		}
 
 	case "set_fills":

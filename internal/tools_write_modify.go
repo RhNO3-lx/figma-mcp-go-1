@@ -25,6 +25,29 @@ func registerWriteModifyTools(s *server.MCPServer, node *Node) {
 		return renderResponse(resp, err)
 	})
 
+	s.AddTool(mcp.NewTool("set_text_style",
+		mcp.WithDescription("Change the font family, font style/weight, or font size of an existing TEXT node. The plugin loads the target font before writing."),
+		mcp.WithString("nodeId", mcp.Required(), mcp.Description("TEXT node ID in colon format e.g. '4029:12345'")),
+		mcp.WithString("fontFamily", mcp.Description("Target font family, e.g. Inter or Noto Sans SC")),
+		mcp.WithString("fontStyle", mcp.Description("Target font style/weight, e.g. Regular, Medium, Semi Bold, or Bold")),
+		mcp.WithNumber("fontSize", mcp.Description("Target font size in pixels")),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		args := req.GetArguments()
+		nodeID, _ := args["nodeId"].(string)
+		params := map[string]interface{}{}
+		if value, ok := args["fontFamily"].(string); ok && value != "" {
+			params["fontFamily"] = value
+		}
+		if value, ok := args["fontStyle"].(string); ok && value != "" {
+			params["fontStyle"] = value
+		}
+		if value, ok := args["fontSize"].(float64); ok {
+			params["fontSize"] = value
+		}
+		resp, err := node.Send(ctx, "set_text_style", []string{nodeID}, params)
+		return renderResponse(resp, err)
+	})
+
 	s.AddTool(mcp.NewTool("set_fills",
 		mcp.WithDescription("Set the fill color of a node."),
 		mcp.WithString("nodeId",

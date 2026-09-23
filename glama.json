@@ -31,6 +31,7 @@
     { "name": "create_text", "description": "Create a text node" },
     { "name": "import_image", "description": "Import a base64 image into Figma" },
     { "name": "set_text", "description": "Update text content of an existing text node" },
+    { "name": "set_text_style", "description": "Change font family, style, or size on an existing text node" },
     { "name": "set_fills", "description": "Set solid fill color on a node" },
     { "name": "set_strokes", "description": "Set solid stroke color and weight on a node" },
     { "name": "move_nodes", "description": "Move nodes to an absolute x/y position" },

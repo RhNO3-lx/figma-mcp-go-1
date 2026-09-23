@@ -18,8 +18,25 @@ beforeEach(() => {
   mockNodes = {};
   (globalThis as any).figma = {
     getNodeByIdAsync: async (id: string) => mockNodes[id] ?? null,
+    loadFontAsync: async () => undefined,
     commitUndo: () => { commitUndoCalled = true; },
   };
+});
+
+describe("set_text_style", () => {
+  it("loads and applies a new font family, style, and size", async () => {
+    mockNodes["1:1"] = { id: "1:1", name: "Label", type: "TEXT", characters: "Hello", fontName: { family: "Inter", style: "Regular" }, fontSize: 14 };
+    const res = await handleWriteModifyRequest(makeRequest("set_text_style", ["1:1"], { fontFamily: "Noto Sans SC", fontStyle: "Bold", fontSize: 18 }));
+    expect(mockNodes["1:1"].fontName).toEqual({ family: "Noto Sans SC", style: "Bold" });
+    expect(mockNodes["1:1"].fontSize).toBe(18);
+    expect(res?.data.fontSize).toBe(18);
+    expect(commitUndoCalled).toBe(true);
+  });
+
+  it("rejects non-text nodes", async () => {
+    mockNodes["1:1"] = { id: "1:1", name: "Frame", type: "FRAME" };
+    await expect(handleWriteModifyRequest(makeRequest("set_text_style", ["1:1"], { fontStyle: "Bold" }))).rejects.toThrow("not a TEXT");
+  });
 });
 
 // ── set_opacity ───────────────────────────────────────────────────────────────

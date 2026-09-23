@@ -24,6 +24,43 @@ export const handleWriteModifyRequest = async (request: any) => {
       };
     }
 
+    case "set_text_style": {
+      const p = request.params || {};
+      const nodeId = request.nodeIds && request.nodeIds[0];
+      if (!nodeId) throw new Error("nodeId is required");
+      const node = await figma.getNodeByIdAsync(nodeId);
+      if (!node) throw new Error(`Node not found: ${nodeId}`);
+      if (node.type !== "TEXT") throw new Error(`Node ${nodeId} is not a TEXT node`);
+
+      const current = typeof node.fontName === "symbol" ? undefined : node.fontName;
+      const changesFont = Boolean(p.fontFamily || p.fontStyle);
+      if (changesFont) {
+        const nextFont = {
+          family: p.fontFamily || current?.family || "Inter",
+          style: p.fontStyle || current?.style || "Regular",
+        };
+        try {
+          await figma.loadFontAsync(nextFont);
+        } catch (error) {
+          throw new Error(`Font is unavailable: ${nextFont.family} ${nextFont.style} (${error instanceof Error ? error.message : String(error)})`);
+        }
+        node.fontName = nextFont;
+      } else if (node.characters.length > 0 && typeof node.getRangeAllFontNames === "function") {
+        const fonts = node.getRangeAllFontNames(0, node.characters.length);
+        for (const font of fonts) await figma.loadFontAsync(font);
+      } else if (current) {
+        await figma.loadFontAsync(current);
+      }
+      if (p.fontSize != null) node.fontSize = Number(p.fontSize);
+      commitMutation();
+      const fontName = typeof node.fontName === "symbol" ? "mixed" : node.fontName;
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: { id: node.id, name: node.name, fontName, fontSize: node.fontSize },
+      };
+    }
+
     case "set_fills": {
       const p = request.params || {};
       const nodeId = request.nodeIds && request.nodeIds[0];

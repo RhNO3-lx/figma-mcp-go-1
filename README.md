@@ -103,6 +103,7 @@ Grouped editing is available through `begin_undo_group`, `commit_undo_group`, `t
 | Tool | Description |
 |------|-------------|
 | `set_text` | Update text content of an existing TEXT node |
+| `set_text_style` | Change an existing TEXT node's font family, style/weight, or size |
 | `set_fills` | Set solid fill color (hex) on a node |
 | `set_strokes` | Set solid stroke color and weight on a node |
 | `set_opacity` | Set opacity of one or more nodes (0 = transparent, 1 = opaque) |
