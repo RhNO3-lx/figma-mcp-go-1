@@ -234,6 +234,7 @@ export const handleReadDocumentRequest = async (request: any) => {
           fileName: figma.root.name,
           currentPageId: figma.currentPage.id,
           currentPageName: figma.currentPage.name,
+          currentPageChildCount: figma.currentPage.children.length,
           pageCount: figma.root.children.length,
           pages: figma.root.children.map((page) => ({
             id: page.id,
