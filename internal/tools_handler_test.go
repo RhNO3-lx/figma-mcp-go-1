@@ -77,6 +77,11 @@ func TestHandlers_NoParamReadTools(t *testing.T) {
 	}
 }
 
+func TestHandlers_GetNodesSummary(t *testing.T) {
+	s, _ := newTestServer(t)
+	callTool(t, s, "get_nodes_summary", map[string]interface{}{"nodeIds": []string{"1:1", "2:2"}})
+}
+
 // ── Read – param tools ────────────────────────────────────────────────────────
 
 func TestHandlers_GetNode(t *testing.T) {

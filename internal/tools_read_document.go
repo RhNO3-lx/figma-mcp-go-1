@@ -28,6 +28,15 @@ func registerReadDocumentTools(s *server.MCPServer, node *Node) {
 		mcp.WithDescription("Get only IDs, names, types, and parent IDs/types of the current Figma selection. Use to verify a multi-screen edit scope without loading full frame trees."),
 	), makeHandler(node, "get_selection_summary", nil, nil))
 
+	s.AddTool(mcp.NewTool("get_nodes_summary",
+		mcp.WithDescription("Get only IDs, names, types, and parent IDs/types for specific Figma nodes without serializing their descendants."),
+		mcp.WithArray("nodeIds", mcp.Required(), mcp.Description("Node IDs to inspect"), mcp.WithStringItems()),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		raw, _ := req.GetArguments()["nodeIds"].([]interface{})
+		resp, err := node.Send(ctx, "get_nodes_summary", toStringSlice(raw), nil)
+		return renderResponse(resp, err)
+	})
+
 	s.AddTool(mcp.NewTool("get_node",
 		mcp.WithDescription("Get a specific Figma node by ID. Must use colon format e.g. '4029:12345', never hyphens."),
 		mcp.WithString("nodeId",

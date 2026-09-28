@@ -32,6 +32,23 @@ export const handleReadDocumentRequest = async (request: any) => {
         })),
       };
 
+    case "get_nodes_summary": {
+      if (!request.nodeIds?.length) throw new Error("nodeIds is required for get_nodes_summary");
+      const nodes = await Promise.all(request.nodeIds.map((id: string) => figma.getNodeByIdAsync(id)));
+      if (nodes.some((node) => !node)) throw new Error("A requested node was not found");
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: nodes.map((node) => ({
+          id: node!.id,
+          name: node!.name,
+          type: node!.type,
+          parentId: node!.parent?.id ?? null,
+          parentType: node!.parent?.type ?? null,
+        })),
+      };
+    }
+
     case "get_node": {
       const nodeId = request.nodeIds && request.nodeIds[0];
       if (!nodeId) throw new Error("nodeIds is required for get_node");
