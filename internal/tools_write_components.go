@@ -43,6 +43,25 @@ func registerWriteComponentTools(s *server.MCPServer, node *Node) {
 		return renderResponse(resp, err)
 	})
 
+	s.AddTool(mcp.NewTool("wrap_nodes_in_section",
+		mcp.WithDescription("Wrap two or more top-level frames from one page in a Figma Section, preserving their node IDs and canvas positions. Use for prototype screens so navigation targets stay usable."),
+		mcp.WithArray("nodeIds", mcp.Required(), mcp.Description("Selected top-level FRAME IDs on the same page"), mcp.WithStringItems()),
+		mcp.WithString("name", mcp.Description("Name of the new section")),
+		mcp.WithNumber("padding", mcp.Description("Padding around the screens in pixels (default 32)")),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		raw, _ := req.GetArguments()["nodeIds"].([]interface{})
+		nodeIDs := toStringSlice(raw)
+		params := map[string]interface{}{}
+		if name, ok := req.GetArguments()["name"].(string); ok && name != "" {
+			params["name"] = name
+		}
+		if padding, ok := req.GetArguments()["padding"].(float64); ok {
+			params["padding"] = padding
+		}
+		resp, err := node.Send(ctx, "wrap_nodes_in_section", nodeIDs, params)
+		return renderResponse(resp, err)
+	})
+
 	s.AddTool(mcp.NewTool("ungroup_nodes",
 		mcp.WithDescription("Ungroup one or more GROUP nodes, moving their children to the parent and removing the group."),
 		mcp.WithArray("nodeIds",

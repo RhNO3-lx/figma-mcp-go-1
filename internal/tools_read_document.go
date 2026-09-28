@@ -24,6 +24,10 @@ func registerReadDocumentTools(s *server.MCPServer, node *Node) {
 		mcp.WithDescription("Get the currently selected nodes in Figma"),
 	), makeHandler(node, "get_selection", nil, nil))
 
+	s.AddTool(mcp.NewTool("get_selection_summary",
+		mcp.WithDescription("Get only IDs, names, types, and parent IDs/types of the current Figma selection. Use to verify a multi-screen edit scope without loading full frame trees."),
+	), makeHandler(node, "get_selection_summary", nil, nil))
+
 	s.AddTool(mcp.NewTool("get_node",
 		mcp.WithDescription("Get a specific Figma node by ID. Must use colon format e.g. '4029:12345', never hyphens."),
 		mcp.WithString("nodeId",

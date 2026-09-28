@@ -185,7 +185,7 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 			return "at least one of cornerRadius, topLeftRadius, topRightRadius, bottomLeftRadius, or bottomRightRadius is required"
 		}
 
-	case "group_nodes":
+	case "group_nodes", "wrap_nodes_in_section":
 		if len(nodeIDs) < 2 {
 			return "nodeIds must contain at least 2 nodes to group"
 		}

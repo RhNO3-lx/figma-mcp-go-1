@@ -760,6 +760,18 @@ func TestValidateRPC_GroupNodes(t *testing.T) {
 	}
 }
 
+func TestValidateRPC_WrapNodesInSection(t *testing.T) {
+	if msg := ValidateRPC("wrap_nodes_in_section", []string{"1:1"}, nil); msg == "" {
+		t.Error("expected at least two frame IDs")
+	}
+	if msg := ValidateRPC("wrap_nodes_in_section", []string{"1:1", "bad"}, nil); msg == "" {
+		t.Error("expected valid node IDs")
+	}
+	if msg := ValidateRPC("wrap_nodes_in_section", []string{"1:1", "2:2"}, nil); msg != "" {
+		t.Errorf("unexpected error: %s", msg)
+	}
+}
+
 func TestValidateRPC_UngroupNodes(t *testing.T) {
 	// missing nodeIds
 	if msg := ValidateRPC("ungroup_nodes", nil, nil); msg == "" {

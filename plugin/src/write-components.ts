@@ -94,6 +94,45 @@ export const handleWriteComponentRequest = async (request: any) => {
       };
     }
 
+    case "wrap_nodes_in_section": {
+      const ids: string[] = request.nodeIds || [];
+      if (ids.length < 2 || new Set(ids).size !== ids.length) throw new Error("At least two distinct frame IDs are required");
+      const nodes = await Promise.all(ids.map((id) => figma.getNodeByIdAsync(id)));
+      if (nodes.some((node) => !node || node.type !== "FRAME")) throw new Error("Every selected node must be an existing FRAME");
+      const frames = nodes as FrameNode[];
+      const page = frames[0].parent;
+      if (!page || page.type !== "PAGE" || frames.some((frame) => frame.parent?.id !== page.id)) {
+        throw new Error("Selected screens must be top-level frames on the same page");
+      }
+      const padding = Math.max(0, Math.min(200, Number(request.params?.padding ?? 32)));
+      if (!Number.isFinite(padding)) throw new Error("padding must be a finite number");
+      const before = frames.map((frame) => ({ id: frame.id, x: frame.x, y: frame.y }));
+      const left = Math.min(...frames.map((frame) => frame.x));
+      const top = Math.min(...frames.map((frame) => frame.y));
+      const right = Math.max(...frames.map((frame) => frame.x + frame.width));
+      const bottom = Math.max(...frames.map((frame) => frame.y + frame.height));
+      const section = figma.createSection();
+      page.appendChild(section);
+      section.name = request.params?.name || "Screens";
+      section.x = left - padding;
+      section.y = top - padding;
+      section.resize(right - left + 2 * padding, bottom - top + 2 * padding);
+      for (let index = 0; index < frames.length; index++) {
+        const frame = frames[index]!;
+        const position = before[index]!;
+        section.appendChild(frame);
+        frame.x = position.x - section.x;
+        frame.y = position.y - section.y;
+      }
+      if (frames.some((frame) => frame.parent?.id !== section.id)) throw new Error("A screen was not moved into the section");
+      commitMutation();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: { id: section.id, name: section.name, type: section.type, pageId: page.id, childIds: frames.map((frame) => frame.id) },
+      };
+    }
+
     case "ungroup_nodes": {
       const nodeIds = request.nodeIds || [];
       if (nodeIds.length === 0) throw new Error("nodeIds is required");
