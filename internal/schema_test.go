@@ -58,6 +58,24 @@ func TestNormalizeNodeID(t *testing.T) {
 
 // ── ValidateRPC ───────────────────────────────────────────────────────────────
 
+func TestValidateRPC_InsertComponentInstance(t *testing.T) {
+	if msg := ValidateRPC("insert_component_instance", nil, map[string]interface{}{"parentId": "1:1", "componentId": "2:2"}); msg != "" {
+		t.Fatalf("valid local component rejected: %s", msg)
+	}
+	if msg := ValidateRPC("insert_component_instance", nil, map[string]interface{}{"parentId": "1:1", "componentKey": "published-key"}); msg != "" {
+		t.Fatalf("valid published component rejected: %s", msg)
+	}
+	for _, params := range []map[string]interface{}{
+		{"parentId": "bad", "componentId": "2:2"},
+		{"parentId": "1:1"},
+		{"parentId": "1:1", "componentId": "2:2", "componentKey": "key"},
+	} {
+		if msg := ValidateRPC("insert_component_instance", nil, params); msg == "" {
+			t.Fatalf("invalid source accepted: %#v", params)
+		}
+	}
+}
+
 func TestValidateRPC_GetNode(t *testing.T) {
 	// missing nodeId
 	if msg := ValidateRPC("get_node", nil, nil); msg == "" {

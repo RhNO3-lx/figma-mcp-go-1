@@ -8,6 +8,20 @@ import (
 )
 
 func registerWriteComponentTools(s *server.MCPServer, node *Node) {
+	s.AddTool(mcp.NewTool("insert_component_instance",
+		mcp.WithDescription("Create an instance of an existing local component by componentId, or import a published library component by componentKey and create its instance. Specify exactly one source."),
+		mcp.WithString("parentId", mcp.Required(), mcp.Description("Target PAGE or FRAME node ID")),
+		mcp.WithString("componentId", mcp.Description("Local COMPONENT node ID")),
+		mcp.WithString("componentKey", mcp.Description("Published library component key")),
+		mcp.WithNumber("x", mcp.Description("Position relative to parent")),
+		mcp.WithNumber("y", mcp.Description("Position relative to parent")),
+		mcp.WithString("name", mcp.Description("Optional instance layer name")),
+		mcp.WithObject("properties", mcp.Description("Optional Figma component properties")),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		resp, err := node.Send(ctx, "insert_component_instance", nil, req.GetArguments())
+		return renderResponse(resp, err)
+	})
+
 	s.AddTool(mcp.NewTool("navigate_to_page",
 		mcp.WithDescription("Switch the active Figma page. Provide either pageId or pageName."),
 		mcp.WithString("pageId", mcp.Description("Page node ID in colon format e.g. '0:1'")),

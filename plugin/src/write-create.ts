@@ -4,6 +4,20 @@ import { commitMutation } from "./undo-history";
 
 export const handleWriteCreateRequest = async (request: any) => {
   switch (request.type) {
+    case "create_svg_node": {
+      const p = request.params || {};
+      if (typeof p.svg !== "string" || p.svg.length > 20000 || !/^<svg\s[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(p.svg)) {
+        throw new Error("A valid SVG smaller than 20 KB is required");
+      }
+      const parent = await getParentNode(p.parentId);
+      const frame = figma.createNodeFromSvg(p.svg);
+      frame.x = p.x != null ? Number(p.x) : 0;
+      frame.y = p.y != null ? Number(p.y) : 0;
+      if (p.name) frame.name = p.name;
+      (parent as any).appendChild(frame);
+      commitMutation();
+      return { type: request.type, requestId: request.requestId, data: { id: frame.id, name: frame.name, type: frame.type, bounds: getBounds(frame) } };
+    }
     case "create_frame": {
       const p = request.params || {};
       const parent = await getParentNode(p.parentId);

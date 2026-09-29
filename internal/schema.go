@@ -220,6 +220,20 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
 		}
 
+	case "insert_component_instance":
+		parentID, _ := params["parentId"].(string)
+		componentID, _ := params["componentId"].(string)
+		componentKey, _ := params["componentKey"].(string)
+		if !ValidNodeID(parentID) {
+			return "parentId must be a valid Figma node ID"
+		}
+		if (componentID == "") == (componentKey == "") {
+			return "provide exactly one of componentId or componentKey"
+		}
+		if componentID != "" && !ValidNodeID(componentID) {
+			return "componentId must be a valid Figma node ID"
+		}
+
 	case "export_tokens":
 		if format, ok := params["format"].(string); ok && format != "" {
 			switch format {
@@ -227,6 +241,14 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 			default:
 				return fmt.Sprintf("format must be json or css, got: %s", format)
 			}
+		}
+
+	case "create_svg_node":
+		if svg, ok := params["svg"].(string); !ok || len(svg) == 0 || len(svg) > 20000 {
+			return "svg must be nonempty and smaller than 20 KB"
+		}
+		if pid, ok := params["parentId"].(string); !ok || !ValidNodeID(pid) {
+			return "parentId must use colon format"
 		}
 
 	case "create_frame":

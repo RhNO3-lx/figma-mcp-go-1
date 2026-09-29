@@ -8,6 +8,18 @@ import (
 )
 
 func registerWriteCreateTools(s *server.MCPServer, node *Node) {
+	s.AddTool(mcp.NewTool("create_svg_node",
+		mcp.WithDescription("Create an editable vector frame from SVG inside a parent frame."),
+		mcp.WithString("parentId", mcp.Required(), mcp.Description("Parent frame node ID")),
+		mcp.WithString("svg", mcp.Required(), mcp.Description("SVG markup (max 20 KB)")),
+		mcp.WithString("name", mcp.Description("Layer name")),
+		mcp.WithNumber("x", mcp.Description("X position")),
+		mcp.WithNumber("y", mcp.Description("Y position")),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		params := req.GetArguments()
+		resp, err := node.Send(ctx, "create_svg_node", nil, params)
+		return renderResponse(resp, err)
+	})
 	s.AddTool(mcp.NewTool("create_frame",
 		mcp.WithDescription("Create a new frame on the current page or inside a parent node."),
 		mcp.WithNumber("x", mcp.Description("X position (default 0)")),

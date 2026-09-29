@@ -1,5 +1,33 @@
 export const handleWriteComponentRequest = async (request: any) => {
   switch (request.type) {
+    case "insert_component_instance": {
+      const p = request.params || {};
+      if (!p.parentId) throw new Error("parentId is required");
+      if (!!p.componentId === !!p.componentKey) throw new Error("Provide exactly one of componentId or componentKey");
+      const parent = await figma.getNodeByIdAsync(p.parentId);
+      if (!parent || !("appendChild" in parent)) throw new Error(`Parent ${p.parentId} cannot contain an instance`);
+      const component = p.componentId
+        ? await figma.getNodeByIdAsync(p.componentId)
+        : await figma.importComponentByKeyAsync(p.componentKey);
+      if (!component || component.type !== "COMPONENT") throw new Error("Component not found or not published");
+      const instance = component.createInstance();
+      try {
+        (parent as ChildrenMixin & BaseNode).appendChild(instance);
+        instance.x = Number(p.x ?? 0);
+        instance.y = Number(p.y ?? 0);
+        if (p.name) instance.name = String(p.name);
+        if (p.properties && Object.keys(p.properties).length) instance.setProperties(p.properties);
+      } catch (error) {
+        instance.remove();
+        throw error;
+      }
+      commitMutation();
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: { id: instance.id, name: instance.name, type: instance.type, componentId: component.id },
+      };
+    }
     case "swap_component": {
       const p = request.params || {};
       const nodeId = request.nodeIds && request.nodeIds[0];
