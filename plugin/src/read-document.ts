@@ -32,6 +32,24 @@ export const handleReadDocumentRequest = async (request: any) => {
         })),
       };
 
+    case "get_selected_component_sources":
+      return {
+        type: request.type,
+        requestId: request.requestId,
+        data: await Promise.all(figma.currentPage.selection.map(async (node) => {
+          const component = node.type === "INSTANCE" ? await node.getMainComponentAsync()
+            : node.type === "COMPONENT" ? node : null;
+          return {
+            id: node.id,
+            name: node.name,
+            type: node.type,
+            componentKey: component?.key ?? null,
+            componentName: component?.name ?? null,
+            remote: component?.remote ?? null,
+          };
+        })),
+      };
+
     case "get_nodes_summary": {
       if (!request.nodeIds?.length) throw new Error("nodeIds is required for get_nodes_summary");
       const nodes = await Promise.all(request.nodeIds.map((id: string) => figma.getNodeByIdAsync(id)));

@@ -28,6 +28,10 @@ func registerReadDocumentTools(s *server.MCPServer, node *Node) {
 		mcp.WithDescription("Get only IDs, names, types, and parent IDs/types of the current Figma selection. Use to verify a multi-screen edit scope without loading full frame trees."),
 	), makeHandler(node, "get_selection_summary", nil, nil))
 
+	s.AddTool(mcp.NewTool("get_selected_component_sources",
+		mcp.WithDescription("Get component keys and source names for selected instances without serializing their children. Useful for identifying published library components from the Assets panel."),
+	), makeHandler(node, "get_selected_component_sources", nil, nil))
+
 	s.AddTool(mcp.NewTool("get_nodes_summary",
 		mcp.WithDescription("Get only IDs, names, types, and parent IDs/types for specific Figma nodes without serializing their descendants."),
 		mcp.WithArray("nodeIds", mcp.Required(), mcp.Description("Node IDs to inspect"), mcp.WithStringItems()),
