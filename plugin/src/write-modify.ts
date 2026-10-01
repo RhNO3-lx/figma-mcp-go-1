@@ -32,6 +32,9 @@ export const handleWriteModifyRequest = async (request: any) => {
       if (!node) throw new Error(`Node not found: ${nodeId}`);
       if (node.type !== "TEXT") throw new Error(`Node ${nodeId} is not a TEXT node`);
 
+      if (p.lineHeight != null && (typeof p.lineHeight !== "number" || !Number.isFinite(p.lineHeight) || p.lineHeight < 1 || p.lineHeight > 1000)) {
+        throw new Error("lineHeight must be between 1 and 1000 pixels");
+      }
       const current = typeof node.fontName === "symbol" ? undefined : node.fontName;
       const changesFont = Boolean(p.fontFamily || p.fontStyle);
       if (changesFont) {
@@ -52,12 +55,16 @@ export const handleWriteModifyRequest = async (request: any) => {
         await figma.loadFontAsync(current);
       }
       if (p.fontSize != null) node.fontSize = Number(p.fontSize);
+      if (p.lineHeight != null) {
+        node.setBoundVariable?.("lineHeight", null);
+        node.lineHeight = { unit: "PIXELS", value: p.lineHeight };
+      }
       commitMutation();
       const fontName = typeof node.fontName === "symbol" ? "mixed" : node.fontName;
       return {
         type: request.type,
         requestId: request.requestId,
-        data: { id: node.id, name: node.name, fontName, fontSize: node.fontSize },
+        data: { id: node.id, name: node.name, fontName, fontSize: node.fontSize, lineHeight: node.lineHeight },
       };
     }
 

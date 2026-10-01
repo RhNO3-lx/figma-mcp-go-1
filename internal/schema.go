@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 )
@@ -316,8 +317,12 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		family, _ := params["fontFamily"].(string)
 		style, _ := params["fontStyle"].(string)
 		size, hasSize := params["fontSize"].(float64)
-		if family == "" && style == "" && !hasSize {
-			return "at least one of fontFamily, fontStyle, or fontSize is required"
+		lineHeight, hasLineHeight := params["lineHeight"].(float64)
+		if family == "" && style == "" && !hasSize && !hasLineHeight {
+			return "at least one of fontFamily, fontStyle, fontSize, or lineHeight is required"
+		}
+		if hasLineHeight && (math.IsNaN(lineHeight) || math.IsInf(lineHeight, 0) || lineHeight < 1 || lineHeight > 1000) {
+			return "lineHeight must be between 1 and 1000 pixels"
 		}
 		if hasSize && (size < 1 || size > 1000) {
 			return "fontSize must be between 1 and 1000"

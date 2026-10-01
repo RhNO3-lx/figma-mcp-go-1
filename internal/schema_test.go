@@ -258,6 +258,17 @@ func TestValidateRPC_SetTextStyle(t *testing.T) {
 	}
 }
 
+func TestValidateRPC_SetLineHeight(t *testing.T) {
+	if msg := ValidateRPC("set_text_style", []string{"1:1"}, map[string]interface{}{"lineHeight": float64(26)}); msg != "" {
+		t.Fatal(msg)
+	}
+	for _, value := range []float64{0, 1001} {
+		if msg := ValidateRPC("set_text_style", []string{"1:1"}, map[string]interface{}{"lineHeight": value}); msg == "" {
+			t.Fatal("expected invalid line height error")
+		}
+	}
+}
+
 func TestValidateRPC_SetFills(t *testing.T) {
 	// missing color
 	if msg := ValidateRPC("set_fills", []string{"1:1"}, nil); msg == "" {

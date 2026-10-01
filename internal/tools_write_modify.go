@@ -26,11 +26,12 @@ func registerWriteModifyTools(s *server.MCPServer, node *Node) {
 	})
 
 	s.AddTool(mcp.NewTool("set_text_style",
-		mcp.WithDescription("Change the font family, font style/weight, or font size of an existing TEXT node. The plugin loads the target font before writing."),
+		mcp.WithDescription("Change the font family, font style/weight, font size, or line height of an existing TEXT node. The plugin loads the target font before writing."),
 		mcp.WithString("nodeId", mcp.Required(), mcp.Description("TEXT node ID in colon format e.g. '4029:12345'")),
 		mcp.WithString("fontFamily", mcp.Description("Target font family, e.g. Inter or Noto Sans SC")),
 		mcp.WithString("fontStyle", mcp.Description("Target font style/weight, e.g. Regular, Medium, Semi Bold, or Bold")),
 		mcp.WithNumber("fontSize", mcp.Description("Target font size in pixels")),
+		mcp.WithNumber("lineHeight", mcp.Description("Fixed line height in pixels, 1–1000; update when enlarging text")),
 	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		args := req.GetArguments()
 		nodeID, _ := args["nodeId"].(string)
@@ -43,6 +44,9 @@ func registerWriteModifyTools(s *server.MCPServer, node *Node) {
 		}
 		if value, ok := args["fontSize"].(float64); ok {
 			params["fontSize"] = value
+		}
+		if value, ok := args["lineHeight"].(float64); ok {
+			params["lineHeight"] = value
 		}
 		resp, err := node.Send(ctx, "set_text_style", []string{nodeID}, params)
 		return renderResponse(resp, err)
