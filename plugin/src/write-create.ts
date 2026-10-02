@@ -20,6 +20,9 @@ export const handleWriteCreateRequest = async (request: any) => {
     }
     case "create_frame": {
       const p = request.params || {};
+      if (p.cornerRadius != null && (typeof p.cornerRadius !== "number" || !Number.isFinite(p.cornerRadius) || p.cornerRadius < 0 || p.cornerRadius > 1000)) {
+        throw new Error("cornerRadius must be a finite number between 0 and 1000");
+      }
       const parent = await getParentNode(p.parentId);
       const frame = figma.createFrame();
       frame.resize(p.width || 100, p.height || 100);
@@ -27,13 +30,14 @@ export const handleWriteCreateRequest = async (request: any) => {
       frame.y = p.y != null ? p.y : 0;
       if (p.name) frame.name = p.name;
       if (p.fillColor) frame.fills = [makeSolidPaint(p.fillColor)];
+      if (p.cornerRadius != null) frame.cornerRadius = p.cornerRadius;
       applyAutoLayout(frame, p);
       (parent as any).appendChild(frame);
       commitMutation();
       return {
         type: request.type,
         requestId: request.requestId,
-        data: { id: frame.id, name: frame.name, type: frame.type, bounds: getBounds(frame) },
+        data: { id: frame.id, name: frame.name, type: frame.type, bounds: getBounds(frame), cornerRadius: frame.cornerRadius },
       };
     }
 

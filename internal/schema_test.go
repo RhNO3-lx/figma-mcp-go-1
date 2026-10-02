@@ -220,10 +220,15 @@ func TestValidateRPC_CreateFrame(t *testing.T) {
 	}
 	// valid
 	msg = ValidateRPC("create_frame", nil, map[string]interface{}{
-		"width": float64(100), "height": float64(100), "layoutMode": "VERTICAL",
+		"width": float64(100), "height": float64(100), "layoutMode": "VERTICAL", "cornerRadius": float64(16),
 	})
 	if msg != "" {
 		t.Errorf("unexpected error: %s", msg)
+	}
+	for _, radius := range []interface{}{float64(-1), float64(1001), "16"} {
+		if msg := ValidateRPC("create_frame", nil, map[string]interface{}{"cornerRadius": radius}); msg == "" {
+			t.Errorf("expected error for invalid radius %v", radius)
+		}
 	}
 }
 

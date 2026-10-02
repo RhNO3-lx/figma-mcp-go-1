@@ -253,6 +253,12 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		}
 
 	case "create_frame":
+		if value, present := params["cornerRadius"]; present {
+			radius, ok := value.(float64)
+			if !ok || math.IsNaN(radius) || math.IsInf(radius, 0) || radius < 0 || radius > 1000 {
+				return "cornerRadius must be a finite number between 0 and 1000"
+			}
+		}
 		if w, ok := params["width"].(float64); ok && w <= 0 {
 			return "width must be positive"
 		}

@@ -28,6 +28,7 @@ func registerWriteCreateTools(s *server.MCPServer, node *Node) {
 		mcp.WithNumber("height", mcp.Description("Height in pixels (default 100)")),
 		mcp.WithString("name", mcp.Description("Frame name")),
 		mcp.WithString("fillColor", mcp.Description("Fill color as hex e.g. #FFFFFF")),
+		mcp.WithNumber("cornerRadius", mcp.Description("Uniform frame corner radius in pixels, 0–1000")),
 		mcp.WithString("layoutMode", mcp.Description("Auto-layout direction: HORIZONTAL, VERTICAL, or NONE")),
 		mcp.WithNumber("paddingTop", mcp.Description("Auto-layout top padding")),
 		mcp.WithNumber("paddingRight", mcp.Description("Auto-layout right padding")),
