@@ -3,15 +3,18 @@
 import { handleReadRequest } from "./read-handlers";
 import { handleWriteRequest } from "./write-handlers";
 
-const sendStatus = () => {
-  figma.ui.postMessage({
-    type: "plugin-status",
-    payload: {
-      fileName: figma.root.name,
-      pageName: figma.currentPage.name,
-      selectionCount: figma.currentPage.selection.length,
-    },
-  });
+let lastStatus = "";
+const sendStatus = (force = false) => {
+  const payload = {
+    fileName: figma.root.name,
+    pageId: figma.currentPage.id,
+    pageName: figma.currentPage.name,
+    selectionCount: figma.currentPage.selection.length,
+  };
+  const snapshot = JSON.stringify(payload);
+  if (!force && snapshot === lastStatus) return;
+  lastStatus = snapshot;
+  figma.ui.postMessage({ type: "plugin-status", payload });
 };
 
 const handleRequest = async (request: any) => {
@@ -33,6 +36,10 @@ const handleRequest = async (request: any) => {
 
 figma.showUI(__html__, { width: 320, height: 210 });
 sendStatus();
+// Page/file renames do not emit currentpagechange. Read only these cheap fields;
+// documentchange would require loading every page in dynamic-page mode.
+const statusTimer = setInterval(sendStatus, 1000);
+figma.on("close", () => clearInterval(statusTimer));
 
 figma.on("selectionchange", () => {
   sendStatus();
@@ -44,7 +51,7 @@ figma.on("currentpagechange", () => {
 
 figma.ui.onmessage = async (message) => {
   if (message.type === "ui-ready") {
-    sendStatus();
+    sendStatus(true);
     return;
   }
   if (message.type === "server-request") {
