@@ -2,6 +2,8 @@
   import { onMount } from "svelte";
 
   let connected = false;
+  let replaced = false;
+  let disposed = false;
   let fileName = "—";
   let pageName = "—";
   let selectionCount = 0;
@@ -15,20 +17,29 @@
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   function connect() {
-    if (socket) socket.close();
-    socket = new WebSocket(WS_URL);
+    if (disposed) return;
+    if (reconnectTimer !== null) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    const previous = socket;
+    const current = new WebSocket(WS_URL);
+    socket = current;
+    replaced = false;
+    if (previous) previous.close();
 
-    socket.onopen = () => {
+    current.onopen = () => {
+      if (socket !== current || disposed) return;
       connected = true;
       parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");
     };
 
-    socket.onclose = () => {
+    current.onclose = (event) => {
+      if (socket !== current || disposed) return;
       connected = false;
       socket = null;
       activeRequests.clear();
       activeRequests = activeRequests;
-      if (reconnectTimer === null) {
+      replaced = event.code === 1000 && event.reason === "replaced by new connection";
+      // A new file owns the bridge now. Retrying would steal it back repeatedly.
+      if (!replaced && reconnectTimer === null) {
         reconnectTimer = setTimeout(() => {
           reconnectTimer = null;
           connect();
@@ -36,11 +47,13 @@
       }
     };
 
-    socket.onerror = () => {
+    current.onerror = () => {
+      if (socket !== current || disposed) return;
       connected = false;
     };
 
-    socket.onmessage = (event) => {
+    current.onmessage = (event) => {
+      if (socket !== current || disposed) return;
       try {
         const payload = JSON.parse(event.data);
         if (payload.requestId) {
@@ -81,6 +94,7 @@
     connect();
 
     return () => {
+      disposed = true;
       window.removeEventListener("message", handleMessage);
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       if (socket) socket.close();
@@ -135,7 +149,8 @@
       </a>
       <div class="badge" class:connected class:disconnected={!connected}>
         <span class="dot" class:connected></span>
-        <span>{connected ? "Connected" : "Disconnected"}</span>
+        <span>{connected ? "Connected" : replaced ? "Other file connected" : "Disconnected"}</span>
+        {#if replaced}<button on:click={connect}>Connect this file</button>{/if}
       </div>
     </div>
   </div>
