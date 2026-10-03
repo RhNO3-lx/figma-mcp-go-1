@@ -35,7 +35,13 @@ export const commitUndoGroup = (id: string): UndoGroup => {
 export const triggerUndoGroup = (id: string): UndoGroup => {
   if (!active || active.id !== id) throw new Error(`undo group is not active: ${id}`);
   const result = { ...active };
-  figma.triggerUndo();
+  // Flush this group before undoing it; otherwise Figma may undo the previous
+  // committed group together with the still-uncommitted writes. A no-op group
+  // has no undo entry and must never undo earlier designer work.
+  if (active.mutationCount > 0) {
+    figma.commitUndo();
+    figma.triggerUndo();
+  }
   active = undefined;
   return result;
 };
