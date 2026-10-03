@@ -4,6 +4,15 @@ import { commitMutation } from "./undo-history";
 
 export const handleWriteCreateRequest = async (request: any) => {
   switch (request.type) {
+    case "create_page": {
+      const name = request.params?.name;
+      if (typeof name !== "string" || !name.trim()) throw new Error("Page name is required");
+      const page = figma.createPage();
+      page.name = name.trim();
+      try { await figma.setCurrentPageAsync(page); } catch (error) { page.remove(); throw error; }
+      commitMutation();
+      return { type: request.type, requestId: request.requestId, data: { id: page.id, name: page.name, type: page.type } };
+    }
     case "create_svg_node": {
       const p = request.params || {};
       if (typeof p.svg !== "string" || p.svg.length > 20000 || !/^<svg\s[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(p.svg)) {
@@ -104,6 +113,8 @@ export const handleWriteCreateRequest = async (request: any) => {
     case "import_image": {
       const p = request.params || {};
       if (!p.imageData) throw new Error("imageData (base64) is required");
+      if (!["FIT", "FILL"].includes(p.scaleMode || "FILL")) throw new Error("Image mode must be FIT or FILL");
+      for (const key of ["width", "height"]) if (p[key] != null && (!Number.isFinite(p[key]) || p[key] <= 0)) throw new Error("Image dimensions must be positive");
       const parent = await getParentNode(p.parentId);
       const bytes = base64ToBytes(p.imageData);
       const image = figma.createImage(bytes);
@@ -118,7 +129,7 @@ export const handleWriteCreateRequest = async (request: any) => {
       return {
         type: request.type,
         requestId: request.requestId,
-        data: { id: rect.id, name: rect.name, type: rect.type, bounds: getBounds(rect) },
+        data: { id: rect.id, name: rect.name, type: rect.type, bounds: getBounds(rect), imageHash: image.hash },
       };
     }
 

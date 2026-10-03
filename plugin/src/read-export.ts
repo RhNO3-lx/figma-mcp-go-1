@@ -1,5 +1,34 @@
 export const handleReadExportRequest = async (request: any) => {
   switch (request.type) {
+    case "get_image_assets": {
+      const root = await figma.getNodeByIdAsync(request.params?.rootId);
+      if (!root || root.type === "DOCUMENT") throw new Error("A Page or layer rootId is required");
+      if (root.type === "PAGE") await root.loadAsync();
+      const hashes = new Map<string, any>();
+      const walk = (node: any, ancestors: string[]) => {
+        if (node.visible === false) return;
+        const context = [...ancestors, node.name].slice(-5);
+        for (const paint of Array.isArray(node.fills) ? node.fills : []) {
+          if (paint.type !== "IMAGE" || !paint.imageHash || paint.visible === false) continue;
+          const item = hashes.get(paint.imageHash) || { hash: paint.imageHash, sources: [] };
+          item.sources.push({ nodeId: node.id, name: node.name, context: context.join(" / ") });
+          hashes.set(paint.imageHash, item);
+        }
+        if ("children" in node) for (const child of node.children) walk(child, context);
+      };
+      walk(root, []);
+      const offset = Math.max(0, Math.floor(request.params?.offset || 0));
+      const limit = Math.min(20, Math.max(1, Math.floor(request.params?.limit || 10)));
+      const assets = [];
+      for (const item of [...hashes.values()].slice(offset, offset + limit)) {
+        const image = figma.getImageByHash(item.hash);
+        if (!image) continue;
+        const bytes = await image.getBytesAsync();
+        const size = await image.getSizeAsync();
+        assets.push({ ...item, ...size, base64: figma.base64Encode(bytes) });
+      }
+      return { type: request.type, requestId: request.requestId, data: { total: hashes.size, offset, assets } };
+    }
     case "get_screenshot": {
       const format =
         request.params && request.params.format

@@ -8,6 +8,10 @@ import (
 )
 
 func registerWriteCreateTools(s *server.MCPServer, node *Node) {
+	s.AddTool(mcp.NewTool("create_page", mcp.WithDescription("Create a Figma Page and navigate to it."), mcp.WithString("name", mcp.Required())), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		resp, err := node.Send(ctx, "create_page", nil, req.GetArguments())
+		return renderResponse(resp, err)
+	})
 	s.AddTool(mcp.NewTool("create_svg_node",
 		mcp.WithDescription("Create an editable vector frame from SVG inside a parent frame."),
 		mcp.WithString("parentId", mcp.Required(), mcp.Description("Parent frame node ID")),

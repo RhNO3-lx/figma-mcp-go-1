@@ -70,13 +70,20 @@ export const handleWriteComponentRequest = async (request: any) => {
     case "delete_nodes": {
       const nodeIds = request.nodeIds || [];
       if (nodeIds.length === 0) throw new Error("nodeIds is required");
-      const results: any[] = [];
-      for (const nid of nodeIds) {
-        const n = await figma.getNodeByIdAsync(nid);
-        if (!n) { results.push({ nodeId: nid, error: "Node not found" }); continue; }
-        n.remove();
-        results.push({ nodeId: nid, deleted: true });
+      const nodes = await Promise.all(nodeIds.map((id: string) => figma.getNodeByIdAsync(id)));
+      for (const node of nodes) {
+        if (!node || node.type === "DOCUMENT" || node.type === "PAGE") throw new Error("Only existing scene layers can be deleted");
       }
+      // Deleting both an ancestor and its child should succeed once, not partially fail.
+      const selectedIds = new Set(nodeIds);
+      const topNodes = (nodes as SceneNode[]).filter(node => {
+        let parent = node.parent;
+        let covered = false;
+        while (parent) { if (selectedIds.has(parent.id)) { covered = true; break; } parent = parent.parent; }
+        return !covered;
+      });
+      for (const node of topNodes) node.remove();
+      const results = nodeIds.map((nodeId: string) => ({ nodeId, deleted: true }));
       commitMutation();
       return { type: request.type, requestId: request.requestId, data: { results } };
     }

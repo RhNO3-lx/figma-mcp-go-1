@@ -18,6 +18,10 @@ import (
 )
 
 func registerReadExportTools(s *server.MCPServer, node *Node) {
+	s.AddTool(mcp.NewTool("get_image_assets", mcp.WithDescription("Export original image fills and source context from a Page or layer. Paginated, read only."), mcp.WithString("rootId", mcp.Required()), mcp.WithNumber("offset"), mcp.WithNumber("limit")), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		resp, err := node.Send(ctx, "get_image_assets", nil, req.GetArguments())
+		return renderResponse(resp, err)
+	})
 	s.AddTool(mcp.NewTool("get_screenshot",
 		mcp.WithDescription("Export a screenshot of selected or specific nodes. Returns base64-encoded image data."),
 		mcp.WithArray("nodeIds",
