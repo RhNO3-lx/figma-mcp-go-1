@@ -53,6 +53,22 @@ func registerReadDocumentTools(s *server.MCPServer, node *Node) {
 		return renderResponse(resp, err)
 	})
 
+	s.AddTool(mcp.NewTool("get_node_outline",
+		mcp.WithDescription("Read a bounded subtree at the requested depth; include text inline without a second scan."),
+		mcp.WithString("nodeId", mcp.Required()),
+		mcp.WithNumber("depth"), mcp.WithNumber("limit"), mcp.WithBoolean("withText"),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		resp, err := node.Send(ctx, "get_node_outline", nil, req.GetArguments())
+		return renderResponse(resp, err)
+	})
+	s.AddTool(mcp.NewTool("get_node_index",
+		mcp.WithDescription("Build or reuse a compact node index for one Frame/container, with text and ancestry; never a Page."),
+		mcp.WithString("nodeId", mcp.Required()),
+	), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		resp, err := node.Send(ctx, "get_node_index", nil, req.GetArguments())
+		return renderResponse(resp, err)
+	})
+
 	s.AddTool(mcp.NewTool("get_nodes_info",
 		mcp.WithDescription("Get detailed information about multiple Figma nodes by ID in a single call."),
 		mcp.WithArray("nodeIds",

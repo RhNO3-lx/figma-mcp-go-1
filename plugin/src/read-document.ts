@@ -1,7 +1,17 @@
+import { readNodeOutline, readNodeIndex, searchIndex } from './node-index';
 import { serializeNode, getBounds, serializeStyles, isMixed, deduplicateStyles } from "./serializers";
 
 export const handleReadDocumentRequest = async (request: any) => {
   switch (request.type) {
+    case "get_node_outline": {
+      const p = request.params ?? {};
+      return { type: request.type, requestId: request.requestId,
+        data: await readNodeOutline(p.nodeId, p.depth, p.withText === true, p.limit) };
+    }
+    case "get_node_index": {
+      return { type: request.type, requestId: request.requestId,
+        data: await readNodeIndex(request.params?.nodeId) };
+    }
     case "get_document": {
       const raw = await serializeNode(figma.currentPage);
       const { tree, globalVars } = deduplicateStyles(raw);
@@ -355,31 +365,29 @@ export const handleReadDocumentRequest = async (request: any) => {
         ? await figma.getNodeByIdAsync(scopeNodeId)
         : figma.currentPage;
       if (!root) throw new Error(`Node not found: ${scopeNodeId}`);
+      if (root.type !== "PAGE" && root.type !== "DOCUMENT") {
+        const index = await readNodeIndex(root.id);
+        const nodes = searchIndex(index.nodes.filter(n => n.id !== root.id), query, types, limit);
+        return { type: request.type, requestId: request.requestId,
+          data: { count: nodes.length, nodes, scopeId: root.id, indexedCount: index.count, truncated: index.truncated, cacheHit: index.cacheHit, revision: index.revision } };
+      }
+      if (root.type === "PAGE") await root.loadAsync();
+      // Discovery on a Page remains live and bounded; never cache an entire file.
       const results: any[] = [];
-      const search = async (n: any) => {
-        if (results.length >= limit) return;
-        if (n !== root) {
-          const nameMatch = !query || n.name.toLowerCase().includes(query);
-          const typeMatch = types.length === 0 || types.includes(n.type);
-          if (nameMatch && typeMatch) {
-            results.push({
-              id: n.id,
-              name: n.name,
-              type: n.type,
-              bounds: getBounds(n),
-            });
-          }
+      let visited = 0;
+      const search = (n: any, path: string[]) => {
+        if (results.length >= limit || visited >= 5000) return;
+        visited++;
+        const currentPath = [...path, n.name];
+        const characters = n.type === "TEXT" ? n.characters : undefined;
+        if (n !== root && (!query || n.name.toLowerCase().includes(query) || characters?.toLowerCase().includes(query)) && (!types.length || types.includes(n.type))) {
+          results.push({ id: n.id, name: n.name, type: n.type, parentId: n.parent?.id, path: currentPath.join(" / "), characters, bounds: getBounds(n) });
         }
-        if (results.length < limit && "children" in n) {
-          for (const child of n.children) await search(child);
-        }
+        if ("children" in n) for (const child of n.children) search(child, currentPath);
       };
-      await search(root);
-      return {
-        type: request.type,
-        requestId: request.requestId,
-        data: { count: results.length, nodes: results },
-      };
+      search(root, []);
+      return { type: request.type, requestId: request.requestId,
+        data: { count: results.length, nodes: results, scopeId: root.id, visited, truncated: visited >= 5000 || results.length >= limit, cacheHit: false } };
     }
 
     case "get_reactions": {

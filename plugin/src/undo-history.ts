@@ -1,3 +1,4 @@
+import { invalidateNodeIndexes } from './node-index';
 interface UndoGroup {
   id: string;
   mutationCount: number;
@@ -8,6 +9,7 @@ let active: UndoGroup | undefined;
 
 /** Commit one ordinary write, or count it inside the active grouped transaction. */
 export const commitMutation = (): void => {
+  invalidateNodeIndexes();
   if (active) {
     active.mutationCount += 1;
     return;
@@ -41,6 +43,7 @@ export const triggerUndoGroup = (id: string): UndoGroup => {
   if (active.mutationCount > 0) {
     figma.commitUndo();
     figma.triggerUndo();
+    invalidateNodeIndexes();
   }
   active = undefined;
   return result;
