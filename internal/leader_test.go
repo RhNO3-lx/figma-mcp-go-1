@@ -182,3 +182,18 @@ func TestLeaderPingEndpoint(t *testing.T) {
 		t.Error("expected ping to succeed for running leader")
 	}
 }
+
+func TestLeaderRPCRejectsBrowserOrigins(t *testing.T) {
+	leader := NewLeader(0, "desktop")
+	for _, origin := range []string{"https://external.example", "http://localhost:1234", "null"} {
+		t.Run(origin, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/rpc", bytes.NewBufferString(`{"tool":"get_metadata"}`))
+			req.Header.Set("Origin", origin)
+			recorder := httptest.NewRecorder()
+			leader.handleRPC(recorder, req)
+			if recorder.Code != http.StatusForbidden {
+				t.Fatalf("browser RPC got status %d", recorder.Code)
+			}
+		})
+	}
+}

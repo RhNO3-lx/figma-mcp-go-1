@@ -101,6 +101,12 @@ func (l *Leader) handleWS(w http.ResponseWriter, r *http.Request) {
 
 // handleRPC handles JSON RPC calls from follower processes.
 func (l *Leader) handleRPC(w http.ResponseWriter, r *http.Request) {
+	// Followers are native HTTP clients. Browser-originated requests must not
+	// bypass the desktop backend's authorization through the raw MCP proxy.
+	if r.Header.Get("Origin") != "" {
+		http.Error(w, "browser RPC is not allowed", http.StatusForbidden)
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
