@@ -8,6 +8,13 @@ import (
 )
 
 func registerWriteCreateTools(s *server.MCPServer, node *Node) {
+	s.AddTool(mcp.NewTool("set_image_fill",
+		mcp.WithDescription("Replace a shape's image fill while preserving node geometry; optional normalized crop."),
+		mcp.WithString("nodeId", mcp.Required()), mcp.WithString("imageData", mcp.Required()), mcp.WithString("scaleMode"),
+		mcp.WithObject("crop")), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		resp, err := node.Send(ctx, "set_image_fill", nil, req.GetArguments())
+		return renderResponse(resp, err)
+	})
 	s.AddTool(mcp.NewTool("create_page", mcp.WithDescription("Create a Figma Page and navigate to it."), mcp.WithString("name", mcp.Required())), func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		resp, err := node.Send(ctx, "create_page", nil, req.GetArguments())
 		return renderResponse(resp, err)

@@ -424,6 +424,13 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
 		}
 
+	case "set_image_fill":
+		if id, _ := params["nodeId"].(string); !ValidNodeID(id) {
+			return "valid nodeId is required"
+		}
+		if data, _ := params["imageData"].(string); data == "" {
+			return "imageData is required"
+		}
 	case "import_image":
 		if imageData, _ := params["imageData"].(string); imageData == "" {
 			return "imageData (base64) is required"

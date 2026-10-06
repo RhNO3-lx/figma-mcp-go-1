@@ -11,7 +11,7 @@ export const handleReadExportRequest = async (request: any) => {
         for (const paint of Array.isArray(node.fills) ? node.fills : []) {
           if (paint.type !== "IMAGE" || !paint.imageHash || paint.visible === false) continue;
           const item = hashes.get(paint.imageHash) || { hash: paint.imageHash, sources: [] };
-          item.sources.push({ nodeId: node.id, name: node.name, context: context.join(" / ") });
+          item.sources.push({ nodeId: node.id, name: node.name, context: context.join(" / "), scaleMode:paint.scaleMode, imageTransform:paint.imageTransform });
           hashes.set(paint.imageHash, item);
         }
         if ("children" in node) for (const child of node.children) walk(child, context);

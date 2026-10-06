@@ -1,3 +1,4 @@
+import { imageCropTransform } from "./image-crop";
 import { getBounds } from "./serializers";
 import { makeSolidPaint, getParentNode, base64ToBytes, applyAutoLayout } from "./write-helpers";
 import { commitMutation } from "./undo-history";
@@ -110,6 +111,19 @@ export const handleWriteCreateRequest = async (request: any) => {
       };
     }
 
+    case "set_image_fill": {
+      const p = request.params || {};
+      const node = await figma.getNodeByIdAsync(p.nodeId);
+      if (!node || !("fills" in node) || node.type === "TEXT") throw new Error("Image fill requires a shape or frame");
+      if (!p.imageData) throw new Error("imageData is required");
+      if (!["FILL", "FIT"].includes(p.scaleMode || "FILL")) throw new Error("Image mode must be FIT or FILL");
+      const image = figma.createImage(base64ToBytes(p.imageData));
+      const size = await image.getSizeAsync();
+      const transform = p.crop ? imageCropTransform(size.width,size.height,(node as SceneNode).width,(node as SceneNode).height,p.crop) : undefined;
+      (node as GeometryMixin).fills = [{type:"IMAGE",imageHash:image.hash,scaleMode:transform?"CROP":p.scaleMode || "FILL",...(transform?{imageTransform:transform}:{})}];
+      commitMutation();
+      return {type:request.type,requestId:request.requestId,data:{id:node.id,imageHash:image.hash,bounds:getBounds(node),...(transform?{imageTransform:transform}:{})}};
+    }
     case "import_image": {
       const p = request.params || {};
       if (!p.imageData) throw new Error("imageData (base64) is required");

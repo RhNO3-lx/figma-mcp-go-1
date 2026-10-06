@@ -49,6 +49,7 @@ export const getBounds = (node: any) => {
 
 export const serializeStyles = async (node: any) => {
   const styles: any = {};
+  if(typeof node.opacity === "number" && node.opacity !== 1)styles.opacity=node.opacity;
 
   if ("fills" in node) {
     // Prefer named style over raw fill values when a style is applied.

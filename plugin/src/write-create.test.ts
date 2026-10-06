@@ -151,3 +151,18 @@ describe("create_component", () => {
     ).rejects.toThrow("nodeId is required");
   });
 });
+
+describe('set_image_fill',()=>{
+ it('changes only fill on a fixed ellipse and retains shape, geometry and stroke',async()=>{
+  const node={id:'1:1',type:'ELLIPSE',width:44,height:44,x:24,y:100,fills:[{type:'SOLID'}],strokes:[{type:'SOLID',color:'#000'}]};mockNodes[node.id]=node;
+  (globalThis as any).figma.createImage=()=>({hash:'hash',getSizeAsync:async()=>({width:1254,height:1254})});
+  await handleWriteCreateRequest(makeRequest('set_image_fill',[],{nodeId:node.id,imageData:'YWJj',crop:{x:0,y:.5,width:.5,height:.5}}));
+  expect(node.fills).toEqual([{type:'IMAGE',imageHash:'hash',scaleMode:'CROP',imageTransform:[[.5,0,0],[0,.5,.5]]}]);
+  expect([node.width,node.height,node.x,node.y,node.type]).toEqual([44,44,24,100,'ELLIPSE']);expect(node.strokes).toEqual([{type:'SOLID',color:'#000'}]);expect(commitUndoCalled).toBe(true);
+ });
+ it('invalid crop leaves original paint unchanged',async()=>{
+  const node={id:'1:1',type:'ELLIPSE',width:44,height:44,fills:[{type:'SOLID'}]};mockNodes[node.id]=node;
+  (globalThis as any).figma.createImage=()=>({hash:'hash',getSizeAsync:async()=>({width:100,height:100})});
+  await expect(handleWriteCreateRequest(makeRequest('set_image_fill',[],{nodeId:node.id,imageData:'YWJj',crop:{x:.8,y:0,width:.5,height:1}}))).rejects.toThrow();expect(node.fills).toEqual([{type:'SOLID'}]);expect(commitUndoCalled).toBe(false);
+ });
+});
