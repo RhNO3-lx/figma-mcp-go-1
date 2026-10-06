@@ -719,7 +719,7 @@ func validateTriggerType(idx int, trigger map[string]any) string {
 	}
 	if t == "AFTER_TIMEOUT" {
 		if _, ok := trigger["timeout"].(float64); !ok {
-			return fmt.Sprintf("reactions[%d].trigger.timeout is required for AFTER_TIMEOUT and must be a number (milliseconds)", idx)
+			return fmt.Sprintf("reactions[%d].trigger.timeout is required for AFTER_TIMEOUT and must be a number (seconds)", idx)
 		}
 	}
 	return ""
