@@ -289,6 +289,7 @@ export const handleReadDocumentRequest = async (request: any) => {
         type: request.type,
         requestId: request.requestId,
         data: {
+          bridgeProtocolVersion: 1,
           fileName: figma.root.name,
           currentPageId: figma.currentPage.id,
           currentPageName: figma.currentPage.name,

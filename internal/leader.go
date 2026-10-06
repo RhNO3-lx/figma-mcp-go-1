@@ -46,7 +46,7 @@ func (l *Leader) GetBridge() *Bridge {
 // Start binds the port and begins serving. Returns an error immediately
 // if the port is already in use (EADDRINUSE → caller detects another leader).
 func (l *Leader) Start() error {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", l.port))
+	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", l.port))
 	if err != nil {
 		return err // includes EADDRINUSE
 	}
